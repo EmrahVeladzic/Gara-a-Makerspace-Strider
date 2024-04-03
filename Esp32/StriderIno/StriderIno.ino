@@ -68,7 +68,12 @@ void loop() {
 
     }
 
+    //Debug purposes
+    Serial.write("cmd");
+
     delay(RUNTIME);
+
+
     disable();
 
   }
@@ -96,7 +101,6 @@ void forward(){
 
 digitalWrite(L_FWD,HIGH);
 digitalWrite(R_FWD,HIGH);
-
 
 }
 
