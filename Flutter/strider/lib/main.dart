@@ -1,7 +1,6 @@
-import 'package:bluetooth_classic/models/device.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bluetooth_classic/bluetooth_classic.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 void main() {
   runApp(const StriderApp());
@@ -35,11 +34,12 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => MainPageState();
 }
 
+bool connected = false;
+double lastL = 0.0;
+double lastR = 0.0;
+
 class MainPageState extends State<MainPage> {
-  double lastL = 0.0;
-  double lastR = 0.0;
-  BluetoothClassic bluetoothClassic = BluetoothClassic();
-  late Device striderInstance;
+  BluetoothState bTS = BluetoothState.UNKNOWN;
 
   void _axisChange(bool lR, double value) {
     setState(() {
@@ -52,9 +52,7 @@ class MainPageState extends State<MainPage> {
     calculateInput();
   }
 
-  void bluetoothWrite(String input) {
-    bluetoothClassic.write(input);
-  }
+  void bluetoothWrite(String input) {}
 
   void calculateInput() {
     if (lastL > 0.125) {
@@ -87,21 +85,25 @@ class MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    checkConnection();
+    btsGetter();
+    stateListener();
   }
 
-  Future<void> checkConnection() async {
-    List<Device> devices = bluetoothClassic.getPairedDevices() as List<Device>;
+  btsGetter() {
+    FlutterBluetoothSerial.instance.state.then((state) {
+      bTS = state;
+      setState(() {});
+    });
+  }
 
-    for (Device dev in devices) {
-      if (dev.name == "Strider") {
-        striderInstance = dev;
+  stateListener() {
+    FlutterBluetoothSerial.instance
+        .onStateChanged()
+        .listen((BluetoothState state) {
+      bTS = state;
 
-        bluetoothClassic.connect(
-            striderInstance.address, "00001101-0000-1000-8000-00805f9b34fb");
-        break;
-      }
-    }
+      setState(() {});
+    });
   }
 
   @override
@@ -113,7 +115,7 @@ class MainPageState extends State<MainPage> {
       ),
       body: Row(children: [
         SizedBox(
-          width: MediaQuery.of(context).size.width / 2,
+          width: MediaQuery.of(context).size.width / 4,
           child: RotatedBox(
             quarterTurns: 3,
             child: Slider(
@@ -134,6 +136,30 @@ class MainPageState extends State<MainPage> {
         ),
         SizedBox(
           width: MediaQuery.of(context).size.width / 2,
+          child: FractionallySizedBox(
+              widthFactor: 0.75,
+              child: FloatingActionButton(
+                  child: connected
+                      ? const Text("Disconnect")
+                      : const Text("Connect to a nearby Strider"),
+                  onPressed: () {
+                    future() async {
+                      if (connected) {
+                        await FlutterBluetoothSerial.instance.requestDisable();
+                      } else {
+                        await FlutterBluetoothSerial.instance.requestEnable();
+                      }
+                    }
+
+                    future().then((value) {
+                      setState(() {
+                        connected = !connected;
+                      });
+                    });
+                  })),
+        ),
+        SizedBox(
+          width: MediaQuery.of(context).size.width / 4,
           child: RotatedBox(
             quarterTurns: 3,
             child: Slider(
