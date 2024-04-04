@@ -68,8 +68,7 @@ void loop() {
 
     }
 
-    //Debug purposes
-    Serial.write("cmd");
+    
 
     delay(RUNTIME);
 

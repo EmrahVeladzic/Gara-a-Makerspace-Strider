@@ -1,9 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  requestPermission(Permission.bluetooth);
+  requestPermission(Permission.bluetoothConnect);
+  requestPermission(Permission.bluetoothScan);
   runApp(const StriderApp());
+}
+
+Future<void> requestPermission(Permission permission) async {
+  if (await permission.isDenied) {
+    await permission.request();
+  }
 }
 
 class StriderApp extends StatelessWidget {
@@ -40,7 +53,8 @@ double lastR = 0.0;
 
 class MainPageState extends State<MainPage> {
   BluetoothState bTS = BluetoothState.UNKNOWN;
-
+  late BluetoothDevice striderInstance;
+  late BluetoothConnection connectionToStrider;
   void _axisChange(bool lR, double value) {
     setState(() {
       if (lR) {
@@ -52,7 +66,9 @@ class MainPageState extends State<MainPage> {
     calculateInput();
   }
 
-  void bluetoothWrite(String input) {}
+  void bluetoothWrite(String input) {
+    connectionToStrider.output.add(utf8.encode(input));
+  }
 
   void calculateInput() {
     if (lastL > 0.125) {
@@ -106,6 +122,27 @@ class MainPageState extends State<MainPage> {
     });
   }
 
+  Future<bool> getDevice() async {
+    List<BluetoothDevice> devices =
+        await FlutterBluetoothSerial.instance.getBondedDevices();
+
+    for (BluetoothDevice dev in devices) {
+      if (dev.name == "Strider") {
+        striderInstance = dev;
+        connectionToStrider =
+            await BluetoothConnection.toAddress(striderInstance.address);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  throwDevice() {
+    connectionToStrider.close();
+    connectionToStrider.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,19 +179,19 @@ class MainPageState extends State<MainPage> {
                   child: connected
                       ? const Text("Disconnect")
                       : const Text("Connect to a nearby Strider"),
-                  onPressed: () {
-                    future() async {
-                      if (connected) {
-                        await FlutterBluetoothSerial.instance.requestDisable();
-                      } else {
-                        await FlutterBluetoothSerial.instance.requestEnable();
-                      }
+                  onPressed: () async {
+                    bool connectedStatus = false;
+
+                    if (connected) {
+                      await FlutterBluetoothSerial.instance.requestDisable();
+                      throwDevice();
+                    } else {
+                      await FlutterBluetoothSerial.instance.requestEnable();
+                      connectedStatus = await getDevice();
                     }
 
-                    future().then((value) {
-                      setState(() {
-                        connected = !connected;
-                      });
+                    setState(() {
+                      connected = connectedStatus;
                     });
                   })),
         ),
