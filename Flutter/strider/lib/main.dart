@@ -30,7 +30,8 @@ class StriderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Strider',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primaryColor: const Color.fromARGB(255, 253, 203, 0),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
         useMaterial3: true,
       ),
       home: const MainPage(title: 'Controller'),
@@ -132,10 +133,17 @@ class MainPageState extends State<MainPage> {
 
     for (BluetoothDevice dev in devices) {
       if (dev.name == "Strider") {
+        try {
         striderInstance = dev;
         connectionToStrider =
-            await BluetoothConnection.toAddress(striderInstance.address);
+          await BluetoothConnection.toAddress(striderInstance.address);
         return true;
+
+        }catch(e){
+            //No Need to do anything
+
+        }
+        
       }
     }
 
@@ -151,16 +159,19 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: const Color.fromARGB(255,0,0,0),
+        
+        title: Text(widget.title ,style:const TextStyle(color:  Color.fromARGB(255, 253, 203, 0))),
       ),
       body: Row(children: [
         SizedBox(
+          
           width: MediaQuery.of(context).size.width / 4,
           child: RotatedBox(
             quarterTurns: 3,
             child: Slider(
               value: lastL,
+              activeColor: const Color.fromARGB(255, 253, 203, 0),
               min: -1.0,
               max: 1.0,
               divisions: 200,
@@ -180,8 +191,11 @@ class MainPageState extends State<MainPage> {
           width: MediaQuery.of(context).size.width / 2,
           child: FractionallySizedBox(
               widthFactor: 0.75,
+             
               child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
                   child: connected
+                  
                       ? const Text("Disconnect")
                       : const Text("Connect to a nearby Strider"),
                   onPressed: () async {
@@ -204,8 +218,10 @@ class MainPageState extends State<MainPage> {
           width: MediaQuery.of(context).size.width / 4,
           child: RotatedBox(
             quarterTurns: 3,
+            
             child: Slider(
               value: lastR,
+              activeColor: const Color.fromARGB(255, 253, 203, 0),
               min: -1.0,
               max: 1.0,
               divisions: 200,
