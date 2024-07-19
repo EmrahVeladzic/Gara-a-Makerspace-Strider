@@ -14,9 +14,9 @@ void main() {
 }
 
 Future<void> requestPermission(Permission permission) async {
-  if (await permission.isDenied) {
+
     await permission.request();
-  }
+  
 }
 
 class StriderApp extends StatelessWidget {
@@ -50,6 +50,7 @@ class MainPage extends StatefulWidget {
 bool connected = false;
 double lastL = 0.0;
 double lastR = 0.0;
+String lasIn = "X";
 
 class MainPageState extends State<MainPage> {
   BluetoothState bTS = BluetoothState.UNKNOWN;
@@ -67,7 +68,10 @@ class MainPageState extends State<MainPage> {
   }
 
   void bluetoothWrite(String input) {
+    if(connected==true &&input!=lasIn){
     connectionToStrider.output.add(utf8.encode(input));
+    lasIn=input;
+    }
   }
 
   void calculateInput() {
@@ -93,7 +97,7 @@ class MainPageState extends State<MainPage> {
       } else if (lastR < -0.125) {
         bluetoothWrite("C");
       } else {
-        bluetoothWrite("0");
+        bluetoothWrite("X");
       }
     }
   }
@@ -166,6 +170,7 @@ class MainPageState extends State<MainPage> {
               onChangeEnd: (value) {
                 setState(() {
                   lastL = 0.0;
+                  _axisChange(true, 0.0);
                 });
               },
             ),
@@ -210,6 +215,7 @@ class MainPageState extends State<MainPage> {
               onChangeEnd: (value) {
                 setState(() {
                   lastR = 0.0;
+                  _axisChange(false, 0.0);
                 });
               },
             ),

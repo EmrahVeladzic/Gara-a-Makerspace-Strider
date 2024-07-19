@@ -1,44 +1,37 @@
 #include "BluetoothSerial.h"
+#include <ESP32Servo.h>
 
-
-
-#define L_Enable 22
-#define R_Enable 23
-
-#define L_FWD 19
-#define R_FWD 17
-
-#define L_REV 18
-#define R_REV 16
-
+#define pinL 17
+#define pinR 18
 
 #define FWD 'W'
 #define L 'A'
 #define REV 'S'
 #define R 'D'
 
-
 #define LL 'Y'
 #define RL 'E'
-
 
 #define LR 'Q'
 #define RR 'C'
 
+#define STOP 'X'
+volatile char cmd = STOP;
 
 #define RUNTIME 10
 
 BluetoothSerial BT_S;
+Servo sL;
+Servo sR;
 
 void setup() {
   // put your setup code here, to run once:
 
-  pinMode(L_Enable,OUTPUT);
-  pinMode(R_Enable,OUTPUT);
-  pinMode(L_FWD,OUTPUT);
-  pinMode(L_REV,OUTPUT);
-  pinMode(R_FWD,OUTPUT);
-  pinMode(R_REV,OUTPUT);
+  pinMode(pinL,OUTPUT);
+  pinMode(pinR,OUTPUT);
+
+  sL.attach(pinL);
+  sR.attach(pinR);
 
  Serial.begin(115200);
   BT_S.begin("Strider");
@@ -46,14 +39,16 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
   if(BT_S.available()){
-  
-    enable();
+    
+   cmd = BT_S.read();
+    
+
+  }
 
 
-    char cmd = BT_S.read();
-
-    switch(cmd){
+  switch(cmd){
       case FWD:forward();break;
       case L:full_left();break;
       case REV:reverse();break;
@@ -63,84 +58,74 @@ void loop() {
       case RL:R_only_left();break;
       case LR:L_only_right();break;
       case RR:R_only_right();break;
+      case STOP: disable();break;
+     
 
       default:break;
-
-    }
-
-    
-
-    delay(RUNTIME);
-
-
-    disable();
-
   }
 
+ delay(RUNTIME);
 
 }
 
 void full_left(){
 
-digitalWrite(R_FWD,HIGH);
-digitalWrite(L_REV,HIGH);
+sL.write(0);
+sR.write(0);
 
 
 }
 
 void full_right(){
 
-digitalWrite(L_FWD,HIGH);
-digitalWrite(R_REV,HIGH);
-
+sL.write(180);
+sR.write(180);
 
 }
 
 void forward(){
 
-digitalWrite(L_FWD,HIGH);
-digitalWrite(R_FWD,HIGH);
+sL.write(180);
+sR.write(0);
+
 
 }
 
 void reverse(){
 
-digitalWrite(L_REV,HIGH);
-digitalWrite(R_REV,HIGH);
+sL.write(0);
+sR.write(180);
 
 
 }
 
 void L_only_left(){
-digitalWrite(L_REV,HIGH);
+
+sL.write(0);
+sR.write(90);
 
 }
 void R_only_left(){
-digitalWrite(R_FWD,HIGH);
+sL.write(90);
+sR.write(180);
   
 }
 
 void L_only_right(){
-digitalWrite(L_FWD,HIGH);
+sL.write(180);
+sR.write(90);
   
 }
 
 void R_only_right(){
-digitalWrite(R_REV,HIGH);
+sL.write(90);
+sR.write(0);
   
 }
 
-void enable(){
-digitalWrite(L_Enable,HIGH);
-digitalWrite(R_Enable,HIGH);
-}
 void disable(){
-digitalWrite(L_Enable,LOW);
-digitalWrite(R_Enable,LOW);
 
-digitalWrite(L_FWD,LOW);
-digitalWrite(R_FWD,LOW);
+sL.write(90);
+sR.write(90);
 
-digitalWrite(L_REV,LOW);
-digitalWrite(R_REV,LOW);
 }
