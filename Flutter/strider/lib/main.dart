@@ -25,7 +25,7 @@ class StriderApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
     return MaterialApp(
       title: 'Strider',
@@ -49,24 +49,13 @@ class MainPage extends StatefulWidget {
 }
 
 bool connected = false;
-double lastL = 0.0;
-double lastR = 0.0;
 String lasIn = "X";
 
 class MainPageState extends State<MainPage> {
   BluetoothState bTS = BluetoothState.UNKNOWN;
   late BluetoothDevice striderInstance;
   late BluetoothConnection connectionToStrider;
-  void _axisChange(bool lR, double value) {
-    setState(() {
-      if (lR) {
-        lastL = value;
-      } else {
-        lastR = value;
-      }
-    });
-    calculateInput();
-  }
+ 
 
   void bluetoothWrite(String input) {
     if(connected==true &&input!=lasIn){
@@ -75,33 +64,6 @@ class MainPageState extends State<MainPage> {
     }
   }
 
-  void calculateInput() {
-    if (lastL > 0.125) {
-      if (lastR > 0.125) {
-        bluetoothWrite("W");
-      } else if (lastR < -0.125) {
-        bluetoothWrite("D");
-      } else {
-        bluetoothWrite("Q");
-      }
-    } else if (lastL < -0.125) {
-      if (lastR > 0.125) {
-        bluetoothWrite("A");
-      } else if (lastR < -0.125) {
-        bluetoothWrite("S");
-      } else {
-        bluetoothWrite("Y");
-      }
-    } else {
-      if (lastR > 0.125) {
-        bluetoothWrite("E");
-      } else if (lastR < -0.125) {
-        bluetoothWrite("C");
-      } else {
-        bluetoothWrite("X");
-      }
-    }
-  }
 
   @override
   void initState() {
@@ -163,32 +125,10 @@ class MainPageState extends State<MainPage> {
         
         title: Text(widget.title ,style:const TextStyle(color:  Color.fromARGB(255, 253, 203, 0))),
       ),
-      body: Row(children: [
+      body: Wrap(children: [
+     
         SizedBox(
-          
-          width: MediaQuery.of(context).size.width / 4,
-          child: RotatedBox(
-            quarterTurns: 3,
-            child: Slider(
-              value: lastL,
-              activeColor: const Color.fromARGB(255, 253, 203, 0),
-              min: -1.0,
-              max: 1.0,
-              divisions: 200,
-              onChanged: (value) {
-                _axisChange(true, value);
-              },
-              onChangeEnd: (value) {
-                setState(() {
-                  lastL = 0.0;
-                  _axisChange(true, 0.0);
-                });
-              },
-            ),
-          ),
-        ),
-        SizedBox(
-          width: MediaQuery.of(context).size.width / 2,
+          width: MediaQuery.of(context).size.width,
           child: FractionallySizedBox(
               widthFactor: 0.75,
              
@@ -213,31 +153,99 @@ class MainPageState extends State<MainPage> {
                       connected = connectedStatus;
                     });
                   })),
-        ),
-        SizedBox(
-          width: MediaQuery.of(context).size.width / 4,
-          child: RotatedBox(
-            quarterTurns: 3,
-            
-            child: Slider(
-              value: lastR,
-              activeColor: const Color.fromARGB(255, 253, 203, 0),
-              min: -1.0,
-              max: 1.0,
-              divisions: 200,
-              onChanged: (value) {
-                _axisChange(false, value);
-              },
-              onChangeEnd: (value) {
-                setState(() {
-                  lastR = 0.0;
-                  _axisChange(false, 0.0);
-                });
-              },
-            ),
-          ),
-        ),
-      ]),
-    );
+),
+
+ SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height/4,
+),
+
+SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: FractionallySizedBox(
+              widthFactor: 0.25,
+             
+              child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
+                 child: const Text("↑",textScaler:TextScaler.linear(2)),
+                  
+                  onPressed: () async {
+                   
+                   bluetoothWrite("W");
+
+                   
+                  })),
+),
+
+SizedBox(
+ width: MediaQuery.of(context).size.width,
+child: FractionallySizedBox(widthFactor: 0.75,
+
+child: Row(
+  children: <Widget>[
+    Expanded(
+       child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
+                 child: const Text("<",textScaler:TextScaler.linear(2)),
+                  
+                  onPressed: () async {
+                   
+                     bluetoothWrite("A");
+                   
+                  }),
+    ),
+    Expanded(
+      child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
+                 child: const Text("·",textScaler:TextScaler.linear(2)),
+                  
+                  onPressed: () async {
+                   
+                     bluetoothWrite("X");
+                   
+                  }),
+    ),
+    Expanded(
+      child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
+                 child: const Text(">",textScaler:TextScaler.linear(2)),
+                  
+                  onPressed: () async {
+                   
+                     bluetoothWrite("D");
+                   
+                  })
+    )
+  ],
+),
+
+
+)
+
+
+),
+
+
+SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: FractionallySizedBox(
+              widthFactor: 0.25,
+             
+              child: FloatingActionButton(
+                 backgroundColor: const Color.fromARGB(255, 253, 203, 0),
+                 child: const Text("↓",textScaler:TextScaler.linear(2)),
+                  
+                  onPressed: () async {
+                   
+                       bluetoothWrite("S");
+                   
+                  })),
+),
+
+
+
+
+]
+    ));
   }
 }
